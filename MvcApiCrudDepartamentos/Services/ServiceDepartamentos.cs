@@ -90,6 +90,24 @@ namespace MvcApiCrudDepartamentos.Services
             }
         }
 
-
+        public async Task UpdateDepartamentoAsync(int id, string nombre, string localidad)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string request = "/api/departamentos";
+                client.BaseAddress = new Uri(this.URL);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+                Departamento dept = new Departamento();
+                dept.IdDepartamento = id;
+                dept.Nombre = nombre;
+                dept.Localidad = localidad;
+                String json =
+                    JsonConvert.SerializeObject(dept);
+                StringContent content =
+                    new StringContent(json, Encoding.UTF8, "application/json");
+                await client.PutAsync(request, content);
+            }
+        }
     }
 }
