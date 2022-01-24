@@ -7,6 +7,8 @@ using System.Net.Http.Headers;
 using MvcApiCrudDepartamentos.Models;
 using Newtonsoft.Json;
 using System.Text;
+using System.Collections.Specialized;
+using System.Web;
 
 namespace MvcApiCrudDepartamentos.Services
 {
@@ -14,12 +16,14 @@ namespace MvcApiCrudDepartamentos.Services
     {
         private string URL;
         private MediaTypeWithQualityHeaderValue Header;
+        private NameValueCollection queryString;
 
         public ServiceDepartamentos(string url)
         {
             this.URL = url;
             this.Header =
                 new MediaTypeWithQualityHeaderValue("application/json");
+            this.queryString = HttpUtility.ParseQueryString(string.Empty);
         }
 
         //LOS METODOS GET SI UTILIZAN GENERICOS
@@ -27,11 +31,16 @@ namespace MvcApiCrudDepartamentos.Services
         {
             using (HttpClient client = new HttpClient())
             {
-                client.BaseAddress = new Uri(this.URL);
+                request = request + "?" + this.queryString;
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Accept.Add(this.Header);
+                client.DefaultRequestHeaders.CacheControl =
+                    CacheControlHeaderValue.Parse("no-cache");
+                //AÑADIMOS NUESTRA CLAVE DE SUBSCRIPCION
+                client.DefaultRequestHeaders.Add
+                    ("Ocp-Apim-Subscription-Key", "c50da623b8ad4321b118d8074523774a");
                 HttpResponseMessage response =
-                    await client.GetAsync(request);
+                    await client.GetAsync(this.URL + request);
                 if (response.IsSuccessStatusCode)
                 {
                     T data = await response.Content.ReadAsAsync<T>();
@@ -43,6 +52,7 @@ namespace MvcApiCrudDepartamentos.Services
                 }
             }
         }
+
         public async Task<List<Departamento>> GetDepartamentosAsync()
         {
             string request = "/api/departamentos";
